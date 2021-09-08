@@ -1,50 +1,37 @@
-// Load Wi-Fi library
-#include <ESP8266WiFi.h>
 
-// Replace with your network credentials
+/*****
+
+  All the resources for this project:
+  https://randomnerdtutorials.com/
+
+*****/
+
+// Loading the ESP8266WiFi library and the PubSubClient library
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
+
+// Change the credentials below, so your ESP8266 connects to your router
 const char* ssid     = "IZZI-9146";
 const char* password = "F82DC0169146";
 
-// Set web server port number to 80
-WiFiServer server(80);
+// Change the variable to your Raspberry Pi IP address, so it connects to your MQTT broker
+const char* mqtt_server = "192.168.0.17";
 
-// Decode HTTP GET value
-String redString = "0";
-String greenString = "0";
-String blueString = "0";
-int pos1 = 0;
-int pos2 = 0;
-int pos3 = 0;
-int pos4 = 0;
+// Initializes the espClient
+WiFiClient espClient;
+PubSubClient client(espClient);
 
-// Variable to store the HTTP req  uest
-String header;
+// Connect an LED to each GPIO of your ESP8266
+const int ledGPIO1 = 2; //RED
+const int ledGPIO2 = 0; //GREEN
+const int ledGPIO3 = 4; //WHITE
+const int ledGPIO4 = 5; //ENCENDIDO/APAGADO
 
-// Red, green, and blue pins for PWM control
-const int redPin = 13;     // 13 corresponds to GPIO13
-const int greenPin = 12;   // 12 corresponds to GPIO12
-const int bluePin = 14;    // 14 corresponds to GPIO14
-
-// Setting PWM bit resolution
-const int resolution = 256;
-
-// Current time
-unsigned long currentTime = millis();
-// Previous time
-unsigned long previousTime = 0; 
-// Define timeout time in milliseconds (example: 2000ms = 2s)
-const long timeoutTime = 2000;
-
-void setup() {
-  Serial.begin(115200);
-  
-  // configure LED PWM resolution/range and set pins to LOW
-  analogWriteRange(resolution);
-  analogWrite(redPin, 0);
-  analogWrite(greenPin, 0);
-  analogWrite(bluePin, 0);
-  
-  // Connect to Wi-Fi network with SSID and password
+// Don't change the function below. This functions connects your ESP8266 to your router
+void setup_wifi() {
+  delay(10);
+  // We start by connecting to a WiFi network
+  Serial.println();
   Serial.print("Connecting to ");
   Serial.println(ssid);
   WiFi.begin(ssid, password);
@@ -52,85 +39,124 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
-  // Print local IP address and start web server
   Serial.println("");
-  Serial.println("WiFi connected.");
-  Serial.println("IP address: ");
+  Serial.print("WiFi connected - ESP IP address: ");
   Serial.println(WiFi.localIP());
-  server.begin();
 }
 
-void loop(){
-  WiFiClient client = server.available();   // Listen for incoming clients
+// This functions is executed when some device publishes a message to a topic that your ESP8266 is subscribed to
+// Change the function below to add logic to your program, so when a device publishes a message to a topic that
+// your ESP8266 is subscribed you can actually do something
+void callback(String topic, byte* message, unsigned int length) {
+  Serial.print("Message arrived on topic: ");
+  Serial.print(topic);
+  Serial.print(". Message: ");
+  String messageTemp;
 
-  if (client) {                             // If a new client connects,
-    currentTime = millis();
-    previousTime = currentTime;
-    Serial.println("New Client.");          // print a message out in the serial port
-    String currentLine = "";                // make a String to hold incoming data from the client
-    while (client.connected() && currentTime - previousTime <= timeoutTime) {            // loop while the client's connected
-      currentTime = millis();
-      if (client.available()) {             // if there's bytes to read from the client,
-        char c = client.read();             // read a byte, then
-        Serial.write(c);                    // print it out the serial monitor
-        header += c;
-        if (c == '\n') {                    // if the byte is a newline character
-          // if the current line is blank, you got two newline characters in a row.
-          // that's the end of the client HTTP request, so send a response:
-          if (currentLine.length() == 0) {
-            // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
-            // and a content-type so the client knows what's coming, then a blank line:
-            client.println("HTTP/1.1 200 OK");
-            client.println("Content-type:text/html");
-            client.println("Connection: close");
-            client.println();
-                   
-            // Display the HTML web page
-            client.println("<!DOCTYPE html><html>");
-            client.println("<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
-            client.println("<link rel=\"icon\" href=\"data:,\">");
-            client.println("<link rel=\"stylesheet\" href=\"https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css\">");
-            client.println("<script src=\"https://cdnjs.cloudflare.com/ajax/libs/jscolor/2.0.4/jscolor.min.js\"></script>");
-            client.println("</head><body><div class=\"container\"><div class=\"row\"><h1>ESP Color Picker</h1></div>");
-            client.println("<a class=\"btn btn-primary btn-lg\" href=\"#\" id=\"change_color\" role=\"button\">Change Color</a> ");
-            client.println("<input class=\"jscolor {onFineChange:'update(this)'}\" id=\"rgb\"></div>");
-            client.println("<script>function update(picker) {document.getElementById('rgb').innerHTML = Math.round(picker.rgb[0]) + ', ' +  Math.round(picker.rgb[1]) + ', ' + Math.round(picker.rgb[2]);");
-            client.println("document.getElementById(\"change_color\").href=\"?r\" + Math.round(picker.rgb[0]) + \"g\" +  Math.round(picker.rgb[1]) + \"b\" + Math.round(picker.rgb[2]) + \"&\";}</script></body></html>");
-            // The HTTP response ends with another blank line
-            client.println();
-
-            // Request sample: /?r201g32b255&
-            // Red = 201 | Green = 32 | Blue = 255
-            if(header.indexOf("GET /?r") >= 0) {
-              pos1 = header.indexOf('r');
-              pos2 = header.indexOf('g');
-              pos3 = header.indexOf('b');
-              pos4 = header.indexOf('&');
-              redString = header.substring(pos1+1, pos2);
-              greenString = header.substring(pos2+1, pos3);
-              blueString = header.substring(pos3+1, pos4);
-              /*Serial.println(redString.toInt());
-              Serial.println(greenString.toInt());
-              Serial.println(blueString.toInt());*/
-              analogWrite(redPin, redString.toInt());
-              analogWrite(greenPin, greenString.toInt());
-              analogWrite(bluePin, blueString.toInt());
-            }
-            // Break out of the while loop
-            break;
-          } else { // if you got a newline, then clear currentLine
-            currentLine = "";
-          }
-        } else if (c != '\r') {  // if you got anything else but a carriage return character,
-          currentLine += c;      // add it to the end of the currentLine
-        }
-      }
-    }
-    // Clear the header variable
-    header = "";
-    // Close the connection
-    client.stop();
-    Serial.println("Client disconnected.");
-    Serial.println("");
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)message[i]);
+    messageTemp += (char)message[i];
   }
+  Serial.println();
+
+  // Feel free to add more if statements to control more GPIOs with MQTT
+
+  // If a message is received on the topic home/office/esp1/gpio2, you check if the message is either 1 or 0. Turns the ESP GPIO according to the message
+  if (topic == "mesa2/4") {
+    Serial.print("Changing GPIO 4 to ");
+    if (messageTemp == "1") {
+      digitalWrite(ledGPIO1, HIGH);
+      Serial.print("On");
+    }
+    else if (messageTemp == "0") {
+      digitalWrite(ledGPIO1, LOW);
+      Serial.print("Off");
+    }
+  }
+  if (topic == "mesa2/5") {
+    Serial.print("Changing GPIO 5 to ");
+    if (messageTemp == "1") {
+      digitalWrite(ledGPIO2, HIGH);
+      Serial.print("On");
+    }
+    else if (messageTemp == "0") {
+      digitalWrite(ledGPIO2, LOW);
+      Serial.print("Off");
+    }
+  }
+  Serial.println();
+}
+
+// This functions reconnects your ESP8266 to your MQTT broker
+// Change the function below if you want to subscribe to more topics with your ESP8266
+void reconnect() {
+  // Loop until we're reconnected
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    // Attempt to connect
+    /*
+      YOU  NEED TO CHANGE THIS NEXT LINE, IF YOU'RE HAVING PROBLEMS WITH MQTT MULTIPLE CONNECTIONS
+      To change the ESP device ID, you will have to give a unique name to the ESP8266.
+      Here's how it looks like now:
+      if (client.connect("ESP8266Client")) {
+      If you want more devices connected to the MQTT broker, you can do it like this:
+      if (client.connect("ESPOffice")) {
+      Then, for the other ESP:
+      if (client.connect("ESPGarage")) {
+      That should solve your MQTT multiple connections problem
+
+      THE SECTION IN loop() function should match your device name
+    */
+    if (client.connect("ESP8266Client")) {
+      Serial.println("connected");
+      // Subscribe or resubscribe to a topic
+      // You can subscribe to more topics (to control more LEDs in this example)
+      client.subscribe("mesa2/4");
+      client.subscribe("mesa2/5");
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
+  }
+}
+
+// The setup function sets your ESP GPIOs to Outputs, starts the serial communication at a baud rate of 115200
+// Sets your mqtt broker and sets the callback function
+// The callback function is what receives messages and actually controls the LEDs
+void setup() {
+  pinMode(ledGPIO1, OUTPUT);
+  pinMode(ledGPIO2, OUTPUT);
+  pinMode(ledGPIO3, OUTPUT);
+  pinMode(ledGPIO1, OUTPUT);
+
+  Serial.begin(9600);
+  setup_wifi();
+  client.setServer(mqtt_server, 1883);
+  client.setCallback(callback);
+}
+
+// For this project, you don't need to change anything in the loop function.
+// Basically it ensures that you ESP is connected to your broker
+void loop() {
+  if (!client.connected()) {
+    reconnect();
+  }
+  if (!client.loop())
+    /*
+      YOU  NEED TO CHANGE THIS NEXT LINE, IF YOU'RE HAVING PROBLEMS WITH MQTT MULTIPLE CONNECTIONS
+      To change the ESP device ID, you will have to give a unique name to the ESP8266.
+      Here's how it looks like now:
+      client.connect("ESP8266Client");
+      If you want more devices connected to the MQTT broker, you can do it like this:
+      client.connect("ESPOffice");
+      Then, for the other ESP:
+      client.connect("ESPGarage");
+      That should solve your MQTT multiple connections problem
+
+      THE SECTION IN recionnect() function should match your device name
+    */
+    client.connect("ESP8266Client");
 }
