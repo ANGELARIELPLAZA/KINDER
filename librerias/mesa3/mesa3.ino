@@ -3,7 +3,7 @@
 
 const char* ssid          = "RESPALDO";
 const char* password = "19080530";
-const char* mqttServer = "192.168.0.17";    // IP adress Raspberry Pi
+const char* mqttServer = "192.168.0.10";    // IP adress Raspberry Pi
 const int mqttPort = 1883;
 const char* mqttUser = "ariel";      // if you don't have MQTT Username, no need input
 const char* mqttPassword = "123";  // if you don't have MQTT Password, no need input
@@ -48,7 +48,7 @@ void setup() {
 
     }
   }
-   pinMode (redpin, OUTPUT);
+  pinMode (redpin, OUTPUT);
   pinMode (bluepin, OUTPUT);
   pinMode (greenpin, OUTPUT);
 
@@ -69,47 +69,50 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.println( miArray);
   color = miArray;
 
+  if (color == "1" )
+  {
+    RGB_color(255, 0, 0); // Red
+    Serial.print("rojo");
+  }
+  if (color == "2" )
+  {
+    RGB_color(0, 255, 0); // Green
+    Serial.print("verde");
 
-  Serial.println();
-  String hexstring = color ;
+  }
 
-  // Get rid of '#' and convert it to integer
-  int number = (int) strtol( &hexstring[1], NULL, 16);
+  if (color == "3" )
+  {
+    RGB_color(0, 0, 255); // Blue
+    Serial.print("azul");
 
-  // Split them up into r, g, b values
-  int r = number >> 16;
-  int g = number >> 8 & 0xFF;
-  int b = number & 0xFF;
-  //  //Saperate Colors are sent through javascript
-  //  String red = server.arg("r");
-  //  String green = server.arg("g");
-  //  String blue = server.arg("b");
-  //  int r = red.toInt();
-  //  int g = green.toInt();
-  //  int b = blue.toInt();
-  //
-  Serial.print("Red:"); Serial.println(r);
-  Serial.print("Green:"); Serial.println(g);
-  Serial.print("Blue:"); Serial.println(b);
-  //
-  //  //PWM Correction 8-bit to 10-bit
-  //    r = r * 4;
-  //    g = g * 4;
-  //    b = b * 4;
-  analogWrite (bluepin, b);
-  analogWrite (greenpin, 255 - g);
-  analogWrite (redpin, 128 - r);
-  //
-  //  //for ULN2003 or Common Cathode RGB Led not needed
-  //  /*
-  //   r = 1024 - r;
-  //   g = 1024 - g;
-  //   b = 1024 - b;
-  //  */
-  //  //ESP supports analogWrite All IOs are PWM
-  //   analogWrite(RedLED,r);
-  //   analogWrite(GreenLED,g);
-  //   analogWrite(BlueLED,b);
+  }
+  if (color == "4" )
+  {
+    RGB_color(255, 0, 255); // Magenta
+    Serial.print("magenta");
+
+  }
+  if (color == "5" )
+  { 
+    RGB_color(255, 233, 0); // Yellow
+     Serial.print("amarillo");
+      
+  }
+  if (color == "6" )
+  {
+    RGB_color(255, 255, 255); // white
+        Serial.print("blanco");
+
+
+  }
+   if (color == "0" )
+  {
+    RGB_color(0, 0, 0); // apagado
+      Serial.print("apagar");
+
+  }
+
 
   Serial.println();
   Serial.println("-----------------------");
@@ -117,7 +120,12 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 
 }
-
+void RGB_color(int red_light_value, int green_light_value, int blue_light_value)
+{
+  analogWrite(redpin, red_light_value);
+  analogWrite(greenpin, green_light_value);
+  analogWrite(bluepin, blue_light_value);
+}
 void loop() {
   client.subscribe("mesa3");
   delay(100);

@@ -191,6 +191,7 @@ border-radius: 1rem;
 .bloque__titulo {
   margin: 0;
 }
+
 /*producto*/
 @media (min-width:768px) {
   .camisa {
