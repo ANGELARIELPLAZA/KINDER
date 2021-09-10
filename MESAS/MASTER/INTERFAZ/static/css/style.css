@@ -64,9 +64,11 @@ div.center {
   text-align: center;
 }
 .b{
-  width: 40%;
-
+  width: 58px;
+  height: 49px;
 }
+
+
 .encender{
 background-color: green;
 border-radius: 1rem;
