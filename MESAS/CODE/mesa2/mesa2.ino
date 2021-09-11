@@ -1,38 +1,27 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
+/* 
+CODIGO PARA VERIFICAR PINES DE ESP8266 Y D1 MINI
+D0=16  D1=5  D2=4  D3=0  D4=2  
+D5=14  D6=12 D7=13 D8=15 
+*/
 
 //LED Connections
-const int bluepin = 2; // D0
-const int redpin = 4;    // D1
-const int greenpin = 0; // D2
-// Change the credentials below, so your ESP8266 connects to your router
+const int bluepin  = 2; // D4
+const int redpin   = 4; // D2
+const int greenpin = 0; // D3
 
-const char* ssid          = "RESPALDO";
-const char* password = "19080530";
-const char* mqtt_server = "192.168.100.19";    // IP adress Raspberry Pi
-/*
-  Basic ESP8266 MQTT example
-  This sketch demonstrates the capabilities of the pubsub library in combination
-  with the ESP8266 board/library.
-  It connects to an MQTT server then:
-  - publishes "hello world" to the topic "outTopic" every two seconds
-  - subscribes to the topic "inTopic", printing out any messages
-    it receives. NB - it assumes the received payloads are strings not binary
-  - If the first character of the topic "inTopic" is an 1, switch ON the ESP Led,
-    else switch it off
-  It will reconnect to the server if the connection is lost using a blocking
-  reconnect function. See the 'mqtt_reconnect_nonblocking' example for how to
-  achieve the same result without blocking the main loop.
-  To install the ESP8266 board, (using Arduino 1.6.4+):
-  - Add the following 3rd party board manager under "File -> Preferences -> Additional Boards Manager URLs":
-       http://arduino.esp8266.com/stable/package_esp8266com_index.json
-  - Open the "Tools -> Board -> Board Manager" and click install for the ESP8266"
-  - Select your ESP8266 in "Tools -> Board"
-*/
+
+// Change the credentials below, so your ESP8266 connects to your router
+const char* ssid          = "IZZI-9146";      // RED DE INTERNET
+const char* password      = "F82DC0169146";   // CONTRASEÑA
+const char* mqtt_server   = "192.168.0.2";    // IP adress Raspberry Pi
+
 
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+
 //unsigned long lastMsg = 0;
 //#define MSG_BUFFER_SIZE  (50)
 //char msg[MSG_BUFFER_SIZE];
@@ -43,7 +32,7 @@ void setup_wifi() {
   delay(10);
   // We start by connecting to a WiFi network
   Serial.println();
-  Serial.print("Connecting to ");
+  Serial.print("ESTABLECIENDO RED ");
   Serial.println(ssid);
 
   WiFi.mode(WIFI_STA);
@@ -57,13 +46,13 @@ void setup_wifi() {
   randomSeed(micros());
 
   Serial.println("");
-  Serial.println("WiFi connected");
+  Serial.println("WIFI CONECTADO");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Message arrived [");
+  Serial.print("Mensaje recibido [");
   Serial.print(topic);
   Serial.print("] ");
   for (int i = 0; i < length; i++) {
@@ -72,71 +61,77 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.println();
 
   // Switch on the LED if an 1 was received as first character
-//  if ((char)payload[0] == '1') {
-//    digitalWrite(BUILTIN_LED, LOW);   // Turn the LED on (Note that LOW is the voltage level
-//    // but actually the LED is on; this is because
-//    // it is active low on the ESP-01)
-//  } else {
-//    digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
-//  }
+  //  if ((char)payload[0] == '1') {
+  //    digitalWrite(BUILTIN_LED, LOW);   // Turn the LED on (Note that LOW is the voltage level
+  //    // but actually the LED is on; this is because
+  //    // it is active low on the ESP-01)
+  //  } else {
+  //    digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
+  //  }
+
+  //SI EL DATO DE ENTRADA ES 1 EJECUTA LO DE SU INTERIOR
   if ((char)payload[0] == '1' )
   {
     RGB_color(255, 0, 0); // Red
-    Serial.print("rojo");
+    Serial.println("rojo");
     Serial.println("-----------------------");
   }
-   if ((char)payload[0] == '2' )
+ 
+  //SI EL DATO DE ENTRADA ES 2 EJECUTA LO DE SU INTERIOR
+  if ((char)payload[0] == '2' )
   {
     RGB_color(0, 255, 0); // Green
-    Serial.print("verde");
+    Serial.println("verde");
     Serial.println("-----------------------");
-
   }
 
-   if ((char)payload[0] == '3' )
+  //SI EL DATO DE ENTRADA ES 3 EJECUTA LO DE SU INTERIOR
+  if ((char)payload[0] == '3' )
   {
     RGB_color(0, 0, 255); // Blue
-    Serial.print("azul");
+    Serial.println("azul");
     Serial.println("-----------------------");
-
   }
-   if ((char)payload[0] == '4' )
+
+  //SI EL DATO DE ENTRADA ES 4 EJECUTA LO DE SU INTERIOR
+  if ((char)payload[0] == '4' )
   {
     RGB_color(255, 0, 255); // Magenta
-    Serial.print("magenta");
+    Serial.println("magenta");
     Serial.println("-----------------------");
+  }
 
+  //SI EL DATO DE ENTRADA ES 5 EJECUTA LO DE SU INTERIOR
+  if ((char)payload[0] == '5' )
+  {
+    RGB_color(255, 20, 0); // Yellow
+    Serial.println("amarillo");
+    Serial.println("-----------------------");
   }
-   if ((char)payload[0] == '5' )
-  { 
-    RGB_color(255, 233, 0); // Yellow
-     Serial.print("amarillo");
-     Serial.println("-----------------------");
-      
-  }
-   if ((char)payload[0] == '6' )
+
+  //SI EL DATO DE ENTRADA ES 6 EJECUTA LO DE SU INTERIOR
+  if ((char)payload[0] == '6' )
   {
     RGB_color(255, 255, 255); // white
-        Serial.print("blanco");
-        Serial.println("-----------------------");
-
-
+    Serial.println("blanco");
+    Serial.println("-----------------------");
   }
-   if ((char)payload[0] == '0' )
+
+  //SI EL DATO DE ENTRADA ES 0 EJECUTA LO DE SU INTERIOR
+  if ((char)payload[0] == '0' )
   {
     RGB_color(0, 0, 0); // apagado
-      Serial.print("apagar");
-      Serial.println("-----------------------");
-
+    Serial.println("apagar");
+    Serial.println("-----------------------");
   }
 
 
 }
 
 void reconnect() {
-  // Loop until we're reconnected
+  // BUCLE DE RECONECCION
   while (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
+    Serial.print("CONECTANDO CON MQTT ...");
     // Create a random client ID
     String clientId = "ESP8266Client";
     clientId += String(random(0xffff), HEX);
@@ -144,13 +139,13 @@ void reconnect() {
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish("outTopic", "hello world");
+      //client.publish("outTopic", "hello world");
       // ... and resubscribe
-      client.subscribe("mesa2");//NOMBRE DE LA MESA ID: 2
+      client.subscribe("mesa2");                    //IDENTIFICADOR DE PLACA (TOPIC)
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
+      Serial.println(" REINTENTANDO EN 5 SEGUNDOS");
       // Wait 5 seconds before retrying
       delay(5000);
     }
