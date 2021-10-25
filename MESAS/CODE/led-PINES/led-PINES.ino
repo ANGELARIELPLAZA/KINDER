@@ -4,9 +4,9 @@ D0=16  D1=5  D2=4  D3=0  D4=2
 D5=14  D6=12  D7=13 D8=15 
 */
 
-int rojo  = 4; //D2
-int verde = 0; //D3
-int azul  = 2; //D4
+int rojo  = 2; //D2
+int verde = 3; //D3
+int azul  = 4; //D4
 void setup() {
   pinMode(rojo, OUTPUT);
   pinMode(verde, OUTPUT);
@@ -33,6 +33,6 @@ void loop() {
 void RGB_color(int rojoValue, int verdeValue, int azulValue)
 {
   analogWrite(rojo, rojoValue); 
-//  analogWrite(verde, verdeValue);
+  analogWrite(verde, verdeValue);
   analogWrite(azul, azulValue);
 }

@@ -5,11 +5,8 @@ app = Flask(__name__)
 mqtt = mqtt.Client()
 mqtt.connect("localhost", 1883, 60)
 mqtt.loop_start()
-topic1 = "mesa1"  # Mesa 1
-topic2 = "mesa2"  # Mesa 2
-topic3 = "mesa3"  # Mesa 3
-topic4 = "mesa4"  # Mesa 4
-topic5 = "tubo"   # tubo led
+# Mesa 1                 # Mesa 2           # Mesa 3         # Mesa 4          # tubo led
+topic1 = "mesa1" ;   topic2 = "mesa2" ; topic3 = "mesa3"  topic4 = "mesa4";  topic5 = "tubo"   
 
 
 @app.route("/", methods=["GET", "POST"])
